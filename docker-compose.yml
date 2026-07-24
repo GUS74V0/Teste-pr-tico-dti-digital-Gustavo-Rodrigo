@@ -11,7 +11,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -24,11 +23,9 @@ services:
       dockerfile: Dockerfile
     container_name: drone-backend
     environment:
-      DATABASE_URL: jdbc:postgresql://postgres:5432/drone
-      DATABASE_USER: ${DATABASE_USER:-postgres}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-postgres}
-      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production-must-be-256-bits}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/drone?createDatabaseIfNotExist=true&useSSL=true&requireSSL=false
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       SPRING_OUTPUT_ANSI_ENABLED: ${SPRING_OUTPUT_ANSI_ENABLED:-ALWAYS}
     ports:
       - "8080:8080"
@@ -38,15 +35,13 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./FrontEnd
       dockerfile: Dockerfile
     container_name: drone-frontend
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
-      FORCE_COLOR: ${FORCE_COLOR:-1}
-      NEXT_COLOR: ${NEXT_COLOR:-1}
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on:
       - backend
 

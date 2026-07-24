@@ -15,6 +15,7 @@ function App() {
   const [drones, setDrones] = useState<Drone[]>([]);
   const [obstaculos, setObstaculos] = useState<Obstaculo[]>([]);
   const [activeVoos, setActiveVoos] = useState<any[]>([]);
+  const [voos, setVoos] = useState<any[]>([]);
 
   const fetchDados = async () => {
     try {
@@ -28,9 +29,11 @@ function App() {
       const resObstaculos = await axios.get('http://localhost:8080/obstaculos').catch(() => ({ data: [] }));
       setObstaculos(Array.isArray(resObstaculos.data) ? resObstaculos.data : []);
       
-      // Assumindo endpoint de pedidos
       const resPedidos = await axios.get('http://localhost:8080/pedidos').catch(() => ({ data: [] }));
       setPedidos(Array.isArray(resPedidos.data) ? resPedidos.data : []);
+
+      const resVoos = await axios.get('http://localhost:8080/entregas/rota').catch(() => ({ data: [] }));
+      setVoos(Array.isArray(resVoos.data) ? resVoos.data : []);
     } catch (e) {
       console.error(e);
     }
@@ -119,7 +122,7 @@ function App() {
             </button>
           </div>
         </div>
-        <DashboardMetrics drones={drones} pedidos={pedidos} />
+        <DashboardMetrics drones={drones} pedidos={pedidos} voos={voos} />
       </header>
 
       <aside className="sidebar glass-panel">

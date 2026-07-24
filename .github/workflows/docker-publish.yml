@@ -51,7 +51,7 @@ jobs:
       - name: 🚀 Build e Push do Backend
         uses: docker/build-push-action@v6
         with:
-          context: ./backend
+          context: ./spring-app
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
@@ -72,7 +72,7 @@ jobs:
       - name: 🚀 Build e Push do Frontend
         uses: docker/build-push-action@v6
         with:
-          context: ./frontend
+          context: ./FrontEnd
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}

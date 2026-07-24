@@ -27,6 +27,61 @@ export default function MapGrid({ obstaculos, drones, pedidos, activeVoos, onAdd
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
 
+  // Helper para detectar interseção com obstáculo e calcular desvio
+  const getLineCircleIntersection = (x1: number, y1: number, x2: number, y2: number, cx: number, cy: number, r: number) => {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return null;
+
+    let t = ((cx - x1) * dx + (cy - y1) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t)); // clamp
+
+    const projX = x1 + t * dx;
+    const projY = y1 + t * dy;
+
+    const distSq = (cx - projX) ** 2 + (cy - projY) ** 2;
+    if (distSq < r * r) {
+      return { projX, projY };
+    }
+    return null;
+  };
+
+  const getPath = (x1: number, y1: number, x2: number, y2: number, obsList: Obstaculo[], depth = 0): {x: number, y: number}[] => {
+    if (depth > 5) return [{ x: x2, y: y2 }];
+    
+    for (const obs of obsList) {
+      const cx = obs.coordenadaX;
+      const cy = obs.coordenadaY;
+      const r = obs.raioKm + 3; // +3 de margem segura
+
+      const intersection = getLineCircleIntersection(x1, y1, x2, y2, cx, cy, r);
+      if (intersection) {
+        const { projX, projY } = intersection;
+        let vx = projX - cx;
+        let vy = projY - cy;
+        let vLen = Math.sqrt(vx * vx + vy * vy);
+        
+        if (vLen === 0) {
+          vx = -(y2 - y1);
+          vy = (x2 - x1);
+          vLen = Math.sqrt(vx * vx + vy * vy);
+          if (vLen === 0) { vx = 1; vy = 0; vLen = 1; }
+        }
+        
+        // Ponto de desvio (waypoint)
+        const wx = cx + (vx / vLen) * r;
+        const wy = cy + (vy / vLen) * r;
+        
+        const path1 = getPath(x1, y1, wx, wy, obsList, depth + 1);
+        const path2 = getPath(wx, wy, x2, y2, obsList, depth + 1);
+        
+        return [...path1, ...path2];
+      }
+    }
+    return [{ x: x2, y: y2 }];
+  };
+
   useEffect(() => {
     if (activeVoos && activeVoos.length > 0) {
       activeVoos.forEach(voo => {
@@ -35,15 +90,35 @@ export default function MapGrid({ obstaculos, drones, pedidos, activeVoos, onAdd
         if (!pts || pts.length === 0) return;
 
         let sequence: any[] = [];
+        let curX = 0;
+        let curY = 0;
+
         // Start
-        sequence.push({ x: 0, y: 0, status: 'CARREGANDO', delay: 1000 });
+        sequence.push({ x: curX, y: curY, status: 'CARREGANDO', delay: 1000 });
+        
         // Deliveries
         pts.forEach((p: any) => {
-          sequence.push({ x: p.coordenadaX, y: p.coordenadaY, status: 'EM_VOO', delay: 2000 });
-          sequence.push({ x: p.coordenadaX, y: p.coordenadaY, status: 'ENTREGANDO', delay: 1000 });
+          const path = getPath(curX, curY, p.coordenadaX, p.coordenadaY, obstaculos);
+          
+          for (let i = 0; i < path.length - 1; i++) {
+            sequence.push({ x: path[i].x, y: path[i].y, status: 'EM_VOO', delay: 1000 });
+          }
+          
+          const finalWp = path[path.length - 1];
+          sequence.push({ x: finalWp.x, y: finalWp.y, status: 'EM_VOO', delay: 1500 });
+          sequence.push({ x: finalWp.x, y: finalWp.y, status: 'ENTREGANDO', delay: 1000 });
+          
+          curX = p.coordenadaX;
+          curY = p.coordenadaY;
         });
+
         // Return
-        sequence.push({ x: 0, y: 0, status: 'RETORNANDO', delay: 2000 });
+        const returnPath = getPath(curX, curY, 0, 0, obstaculos);
+        for (let i = 0; i < returnPath.length - 1; i++) {
+          sequence.push({ x: returnPath[i].x, y: returnPath[i].y, status: 'RETORNANDO', delay: 1000 });
+        }
+        const finalRet = returnPath[returnPath.length - 1];
+        sequence.push({ x: finalRet.x, y: finalRet.y, status: 'RETORNANDO', delay: 1500 });
         sequence.push({ x: 0, y: 0, status: 'IDLE', delay: 500 });
 
         let currentStep = 0;
