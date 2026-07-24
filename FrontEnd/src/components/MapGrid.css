@@ -11,6 +11,42 @@
   cursor: crosshair;
 }
 
+.map-controls-panel {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(10, 10, 15, 0.85);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 10px;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.map-controls-panel button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.map-controls-panel button:hover {
+  background: var(--neon-cyan);
+  color: #000;
+  transform: scale(1.1);
+}
+
 .map-grid {
   width: 100%;
   height: 100%;

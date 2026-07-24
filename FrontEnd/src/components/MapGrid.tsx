@@ -2,7 +2,7 @@ import { useState, useRef, MouseEvent as ReactMouseEvent, useEffect } from 'reac
 import type { Drone, Pedido, Obstaculo } from '../types';
 import DroneMarker from './DroneMarker';
 import './MapGrid.css';
-import { MapPin, X } from 'lucide-react';
+import { MapPin, X, ZoomIn, ZoomOut, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Move } from 'lucide-react';
 
 interface MapGridProps {
   obstaculos: Obstaculo[];
@@ -15,11 +15,17 @@ interface MapGridProps {
 
 export default function MapGrid({ obstaculos, drones, pedidos, activeVoos, onAddObstaculo, onDeleteObstaculo }: MapGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const mapGridRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
   const [currentPoint, setCurrentPoint] = useState<{ x: number; y: number } | null>(null);
   const [pendingObstaculo, setPendingObstaculo] = useState<Obstaculo | null>(null);
   const [animatedDrones, setAnimatedDrones] = useState<Record<number, {x: number, y: number, status: string}>>({});
+  
+  // Camera controls
+  const [manualZoom, setManualZoom] = useState(1);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
 
   useEffect(() => {
     if (activeVoos && activeVoos.length > 0) {
@@ -60,10 +66,12 @@ export default function MapGrid({ obstaculos, drones, pedidos, activeVoos, onAdd
   const MAP_MAX = 100;
 
   const getCoordinates = (e: ReactMouseEvent) => {
-    if (!containerRef.current) return { x: 0, y: 0 };
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * MAP_MAX;
-    const y = ((e.clientY - rect.top) / rect.height) * MAP_MAX;
+    if (!mapGridRef.current) return { x: 0, y: 0 };
+    const rect = mapGridRef.current.getBoundingClientRect();
+    let x = ((e.clientX - rect.left) / rect.width) * MAP_MAX;
+    let y = ((e.clientY - rect.top) / rect.height) * MAP_MAX;
+    x = Math.max(0, Math.min(100, x));
+    y = Math.max(0, Math.min(100, y));
     return { x, y };
   };
 
@@ -132,10 +140,18 @@ export default function MapGrid({ obstaculos, drones, pedidos, activeVoos, onAdd
     isMoving = true;
   }
   
-  // Apply a subtle scale and translate to focus on the drone
-  const transform = isMoving 
-    ? `scale(1.2) translate(calc(50% - ${cameraX}%), calc(50% - ${cameraY}%))`
-    : `scale(1) translate(0, 0)`;
+  let finalScale = manualZoom;
+  let finalPanX = panX;
+  let finalPanY = panY;
+
+  if (isMoving) {
+    finalScale = 1.2;
+    finalPanX = 50 - cameraX;
+    finalPanY = 50 - cameraY;
+  }
+  
+  // Apply scale and translate
+  const transform = `scale(${finalScale}) translate(${finalPanX}%, ${finalPanY}%)`;
 
   return (
     <div 
@@ -146,7 +162,25 @@ export default function MapGrid({ obstaculos, drones, pedidos, activeVoos, onAdd
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <div className="map-grid" style={{ transform, transition: 'transform 1s ease-in-out', transformOrigin: 'center' }}>
+      <div className="map-controls-panel">
+        <button onClick={() => setPanY(y => y + 15)} title="Mover para Cima"><ArrowUp size={16} /></button>
+        <div style={{ display: 'flex', gap: '5px' }}>
+          <button onClick={() => setPanX(x => x + 15)} title="Mover para Esquerda"><ArrowLeft size={16} /></button>
+          <button onClick={() => { setManualZoom(1); setPanX(0); setPanY(0); }} title="Resetar Câmera"><Move size={16} /></button>
+          <button onClick={() => setPanX(x => x - 15)} title="Mover para Direita"><ArrowRight size={16} /></button>
+        </div>
+        <button onClick={() => setPanY(y => y - 15)} title="Mover para Baixo"><ArrowDown size={16} /></button>
+        <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
+          <button onClick={() => setManualZoom(z => Math.min(z + 0.2, 3))} title="Zoom In"><ZoomIn size={16} /></button>
+          <button onClick={() => setManualZoom(z => Math.max(z - 0.2, 0.5))} title="Zoom Out"><ZoomOut size={16} /></button>
+        </div>
+      </div>
+
+      <div 
+        className="map-grid" 
+        ref={mapGridRef}
+        style={{ transform, transition: 'transform 0.5s ease', transformOrigin: 'center' }}
+      >
         {/* Draw Base Station */}
         <div className="base-station" style={{ top: '0%', left: '0%' }}>
           BASE
