@@ -1,0 +1,54 @@
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: drone-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-drone}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: drone-backend
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/drone
+      DATABASE_USER: ${DATABASE_USER:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production-must-be-256-bits}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      SPRING_OUTPUT_ANSI_ENABLED: ${SPRING_OUTPUT_ANSI_ENABLED:-ALWAYS}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: seuimovel-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+      FORCE_COLOR: ${FORCE_COLOR:-1}
+      NEXT_COLOR: ${NEXT_COLOR:-1}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
