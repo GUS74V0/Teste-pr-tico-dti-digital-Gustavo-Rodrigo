@@ -20,7 +20,7 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: ./spring-app
       dockerfile: Dockerfile
     container_name: drone-backend
     environment:
@@ -40,7 +40,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: seuimovel-frontend
+    container_name: drone-frontend
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
       FORCE_COLOR: ${FORCE_COLOR:-1}

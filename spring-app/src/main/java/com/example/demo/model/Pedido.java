@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -12,15 +13,15 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Localização do cliente (X, Y)[cite: 1]
+    // Localização do cliente (X, Y)
     private Double coordenadaX;
     private Double coordenadaY;
 
-    // Peso do pacote[cite: 1]
+    // Peso do pacote
     private Double peso;
 
     @Enumerated(EnumType.STRING)
-    // Prioridade da entrega (baixa, média, alta)[cite: 1]
+    // Prioridade da entrega (baixa, média, alta)
     private PrioridadePedido prioridade;
 
     @Enumerated(EnumType.STRING)
@@ -31,6 +32,13 @@ public class Pedido {
     @JoinColumn(name = "voo_id")
     private Voo voo;
 
+    private LocalDateTime dataCriacao;
+
     public Pedido() {
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        dataCriacao = LocalDateTime.now();
     }
 }

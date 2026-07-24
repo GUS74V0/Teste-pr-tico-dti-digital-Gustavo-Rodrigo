@@ -21,7 +21,13 @@ public class Voo {
     @OneToMany(mappedBy = "voo", cascade = CascadeType.ALL)
     private List<Pedido> pedidos;
 
+    // Distância total calculada (ida, percurso entre clientes e volta)
     private Double distanciaTotalPrevistaKm;
+
+    // Tempo total estimado em minutos baseado na velocidade do drone e distância
+    private Double tempoTotalEstimadoMinutos;
+
+    // Peso total carregado (para validar contra a capacidade do drone)
     private Double pesoTotalCarregadoKg;
 
     @Enumerated(EnumType.STRING)

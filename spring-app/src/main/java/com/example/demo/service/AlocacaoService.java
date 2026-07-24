@@ -17,11 +17,13 @@ public class AlocacaoService {
     private final PedidoRepository pedidoRepository;
     private final DroneRepository droneRepository;
     private final VooRepository vooRepository;
+    private final com.example.demo.repository.ObstaculoRepository obstaculoRepository;
 
-    public AlocacaoService(PedidoRepository pedidoRepository, DroneRepository droneRepository, VooRepository vooRepository) {
+    public AlocacaoService(PedidoRepository pedidoRepository, DroneRepository droneRepository, VooRepository vooRepository, com.example.demo.repository.ObstaculoRepository obstaculoRepository) {
         this.pedidoRepository = pedidoRepository;
         this.droneRepository = droneRepository;
         this.vooRepository = vooRepository;
+        this.obstaculoRepository = obstaculoRepository;
     }
 
 
@@ -35,7 +37,8 @@ public class AlocacaoService {
             return;
         }
 
-        List<Pedido> pedidosPendentes = pedidoRepository.findByStatusOrderByPrioridadeDesc(StatusPedido.PENDENTE);
+        List<Pedido> pedidosPendentes = pedidoRepository.findByStatusOrderByPrioridadeDescDataCriacaoAsc(StatusPedido.PENDENTE);
+        List<Obstaculo> obstaculos = obstaculoRepository.findAll();
 
         for (Drone drone : dronesDisponiveis) {
             if (pedidosPendentes.isEmpty()) break;
@@ -51,10 +54,10 @@ public class AlocacaoService {
                     continue;
                 }
 
-                double distanciaParaPedido = calcularDistancia(xAtual, yAtual, pedido.getCoordenadaX(), pedido.getCoordenadaY());
-                double distanciaDeVolta = calcularDistancia(pedido.getCoordenadaX(), pedido.getCoordenadaY(), 0.0, 0.0);
+                double distanciaParaPedido = calcularDistanciaComObstaculos(xAtual, yAtual, pedido.getCoordenadaX(), pedido.getCoordenadaY(), obstaculos);
+                double distanciaDeVolta = calcularDistanciaComObstaculos(pedido.getCoordenadaX(), pedido.getCoordenadaY(), 0.0, 0.0, obstaculos);
                 
-                double distanciaDeVoltaAntiga = calcularDistancia(xAtual, yAtual, 0.0, 0.0);
+                double distanciaDeVoltaAntiga = calcularDistanciaComObstaculos(xAtual, yAtual, 0.0, 0.0, obstaculos);
                 double novaDistanciaTotal = distanciaTotalPrevista - distanciaDeVoltaAntiga + distanciaParaPedido + distanciaDeVolta;
 
                 if (novaDistanciaTotal <= drone.getAutonomiaAtualKm()) {
@@ -73,6 +76,11 @@ public class AlocacaoService {
                 voo.setPedidos(pedidosAlocados);
                 voo.setPesoTotalCarregadoKg(pesoAtual);
                 voo.setDistanciaTotalPrevistaKm(distanciaTotalPrevista);
+
+                if (drone.getVelocidadeKmH() != null && drone.getVelocidadeKmH() > 0) {
+                    voo.setTempoTotalEstimadoMinutos((distanciaTotalPrevista / drone.getVelocidadeKmH()) * 60.0);
+                }
+
                 voo.setStatus(StatusVoo.CRIADO);
                 voo.setDataHoraSaida(LocalDateTime.now());
 
@@ -90,7 +98,38 @@ public class AlocacaoService {
         }
     }
 
-    private double calcularDistancia(double x1, double y1, double x2, double y2) {
-        return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+    private double calcularDistanciaComObstaculos(double x1, double y1, double x2, double y2, List<Obstaculo> obstaculos) {
+        double distanciaReta = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+        double distanciaTotal = distanciaReta;
+
+        for (Obstaculo obs : obstaculos) {
+            if (houverInterseccao(x1, y1, x2, y2, obs)) {
+                // Penalidade para desviar do obstáculo (meia circunferência + margem)
+                distanciaTotal += (Math.PI * obs.getRaioKm());
+            }
+        }
+        return distanciaTotal;
+    }
+
+    private boolean houverInterseccao(double x1, double y1, double x2, double y2, Obstaculo obs) {
+        double cx = obs.getCoordenadaX();
+        double cy = obs.getCoordenadaY();
+        double r = obs.getRaioKm();
+
+        // Cálculo da distância do centro do obstáculo até o segmento de reta
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        double lineLengthSq = dx * dx + dy * dy;
+
+        if (lineLengthSq == 0) {
+            return Math.sqrt(Math.pow(cx - x1, 2) + Math.pow(cy - y1, 2)) <= r;
+        }
+
+        double t = Math.max(0, Math.min(1, ((cx - x1) * dx + (cy - y1) * dy) / lineLengthSq));
+        double projX = x1 + t * dx;
+        double projY = y1 + t * dy;
+
+        double distanceSq = Math.pow(cx - projX, 2) + Math.pow(cy - projY, 2);
+        return distanceSq <= r * r;
     }
 }

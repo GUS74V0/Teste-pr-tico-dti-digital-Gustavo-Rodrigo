@@ -4,6 +4,7 @@ import com.example.demo.model.*;
 import com.example.demo.repository.DroneRepository;
 import com.example.demo.repository.PedidoRepository;
 import com.example.demo.repository.VooRepository;
+import com.example.demo.repository.ObstaculoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +31,9 @@ class AlocacaoServiceTest {
 
     @Mock
     private VooRepository vooRepository;
+
+    @Mock
+    private ObstaculoRepository obstaculoRepository;
 
     @InjectMocks
     private AlocacaoService alocacaoService;
@@ -70,14 +74,14 @@ class AlocacaoServiceTest {
 
         alocacaoService.alocarPedidos();
 
-        verify(pedidoRepository, never()).findByStatusOrderByPrioridadeDesc(any());
+        verify(pedidoRepository, never()).findByStatusOrderByPrioridadeDescDataCriacaoAsc(any());
         verify(vooRepository, never()).save(any());
     }
 
     @Test
     void deveAlocarPedidoUnicoSeRespeitarCapacidadeEAutonomia() {
         when(droneRepository.findAll()).thenReturn(List.of(droneDisponivel));
-        when(pedidoRepository.findByStatusOrderByPrioridadeDesc(StatusPedido.PENDENTE))
+        when(pedidoRepository.findByStatusOrderByPrioridadeDescDataCriacaoAsc(StatusPedido.PENDENTE))
                 .thenReturn(new java.util.ArrayList<>(List.of(pedido1)));
         when(vooRepository.save(any(Voo.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -103,7 +107,7 @@ class AlocacaoServiceTest {
     @Test
     void deveRespeitarCapacidadeDoDroneNaoAlocandoPedidosQueExcedamPeso() {
         when(droneRepository.findAll()).thenReturn(List.of(droneDisponivel));
-        when(pedidoRepository.findByStatusOrderByPrioridadeDesc(StatusPedido.PENDENTE))
+        when(pedidoRepository.findByStatusOrderByPrioridadeDescDataCriacaoAsc(StatusPedido.PENDENTE))
                 .thenReturn(new java.util.ArrayList<>(List.of(pedido1, pedido2)));
         when(vooRepository.save(any(Voo.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -135,7 +139,7 @@ class AlocacaoServiceTest {
         pedido3.setStatus(StatusPedido.PENDENTE);
 
         when(droneRepository.findAll()).thenReturn(List.of(droneDisponivel));
-        when(pedidoRepository.findByStatusOrderByPrioridadeDesc(StatusPedido.PENDENTE))
+        when(pedidoRepository.findByStatusOrderByPrioridadeDescDataCriacaoAsc(StatusPedido.PENDENTE))
                 .thenReturn(new java.util.ArrayList<>(List.of(pedido1, pedido3)));
         when(vooRepository.save(any(Voo.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
