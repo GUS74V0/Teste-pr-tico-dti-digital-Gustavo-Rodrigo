@@ -1,6 +1,6 @@
 .app-container {
   display: grid;
-  grid-template-columns: 350px 1fr;
+  grid-template-columns: 350px 1fr 350px;
   grid-template-rows: 90px 1fr;
   height: 100vh;
   gap: 24px;
@@ -29,8 +29,12 @@
   border-radius: 12px;
 }
 
+.sidebar.right-sidebar {
+  grid-column: 3 / 4;
+}
+
 .main-content {
-  grid-column: 2 / -1;
+  grid-column: 2 / 3;
   display: flex;
   align-items: center;
   justify-content: center;

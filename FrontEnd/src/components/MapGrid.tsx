@@ -1,4 +1,4 @@
-import { useState, useRef, MouseEvent as ReactMouseEvent } from 'react';
+import { useState, useRef, MouseEvent as ReactMouseEvent, useEffect } from 'react';
 import type { Drone, Pedido, Obstaculo } from '../types';
 import DroneMarker from './DroneMarker';
 import './MapGrid.css';
@@ -8,16 +8,53 @@ interface MapGridProps {
   obstaculos: Obstaculo[];
   drones: Drone[];
   pedidos: Pedido[];
+  activeVoos: any[];
   onAddObstaculo: (obs: Obstaculo) => void;
   onDeleteObstaculo: (id: number) => void;
 }
 
-export default function MapGrid({ obstaculos, drones, pedidos, onAddObstaculo, onDeleteObstaculo }: MapGridProps) {
+export default function MapGrid({ obstaculos, drones, pedidos, activeVoos, onAddObstaculo, onDeleteObstaculo }: MapGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
   const [currentPoint, setCurrentPoint] = useState<{ x: number; y: number } | null>(null);
   const [pendingObstaculo, setPendingObstaculo] = useState<Obstaculo | null>(null);
+  const [animatedDrones, setAnimatedDrones] = useState<Record<number, {x: number, y: number, status: string}>>({});
+
+  useEffect(() => {
+    if (activeVoos && activeVoos.length > 0) {
+      activeVoos.forEach(voo => {
+        const droneId = voo.drone.id;
+        const pts = voo.pedidos;
+        if (!pts || pts.length === 0) return;
+
+        let sequence: any[] = [];
+        // Start
+        sequence.push({ x: 0, y: 0, status: 'CARREGANDO', delay: 1000 });
+        // Deliveries
+        pts.forEach((p: any) => {
+          sequence.push({ x: p.coordenadaX, y: p.coordenadaY, status: 'EM_VOO', delay: 2000 });
+          sequence.push({ x: p.coordenadaX, y: p.coordenadaY, status: 'ENTREGANDO', delay: 1000 });
+        });
+        // Return
+        sequence.push({ x: 0, y: 0, status: 'RETORNANDO', delay: 2000 });
+        sequence.push({ x: 0, y: 0, status: 'IDLE', delay: 500 });
+
+        let currentStep = 0;
+        const playNext = () => {
+          if (currentStep >= sequence.length) return;
+          const step = sequence[currentStep];
+          setAnimatedDrones(prev => ({
+            ...prev,
+            [droneId]: { x: step.x, y: step.y, status: step.status }
+          }));
+          currentStep++;
+          setTimeout(playNext, step.delay);
+        };
+        playNext();
+      });
+    }
+  }, [activeVoos]);
 
   // Constants for map scale (0 to 100)
   const MAP_MAX = 100;
@@ -84,12 +121,19 @@ export default function MapGrid({ obstaculos, drones, pedidos, onAddObstaculo, o
   };
 
   // Calculate center camera based on drone position (or base if none moving)
-  const activeDrone = drones.find(d => d.status === 'CARREGANDO' || d.status === 'EM_TRANSITO');
-  const cameraX = activeDrone ? 50 + (activeDrone.id * 5) : 0; // Mock current drone coord
-  const cameraY = activeDrone ? 50 + (activeDrone.id * 5) : 0; 
+  let cameraX = 0;
+  let cameraY = 0;
+  let isMoving = false;
+
+  const firstMovingDrone = Object.values(animatedDrones).find(d => d.status !== 'IDLE' && d.status !== 'CARREGANDO');
+  if (firstMovingDrone) {
+    cameraX = firstMovingDrone.x;
+    cameraY = firstMovingDrone.y;
+    isMoving = true;
+  }
   
   // Apply a subtle scale and translate to focus on the drone
-  const transform = activeDrone 
+  const transform = isMoving 
     ? `scale(1.2) translate(calc(50% - ${cameraX}%), calc(50% - ${cameraY}%))`
     : `scale(1) translate(0, 0)`;
 
@@ -171,15 +215,16 @@ export default function MapGrid({ obstaculos, drones, pedidos, onAddObstaculo, o
 
         {/* Draw Drones */}
         {drones.map(d => {
-          // Simplification for 2D visualization: 
-          // If IDLE, they are at base (0,0). 
-          // If CARREGANDO/EM_TRANSITO, we could try to place them somewhere. For this demo, let's put them at base if IDLE, else randomly spread or moving.
-          // In a real system, the Voo would have current coordinates.
-          const isIdle = d.status === 'IDLE';
-          const x = isIdle ? 0 : 50 + (d.id * 5); // Mock moving position
-          const y = isIdle ? 0 : 50 + (d.id * 5); // Mock moving position
+          const animState = animatedDrones[d.id!];
+          const x = animState ? animState.x : 0;
+          const y = animState ? animState.y : 0;
+          
+          // Merge real backend drone with animated status
+          const displayDrone = animState 
+            ? { ...d, status: animState.status as any } 
+            : d;
 
-          return <DroneMarker key={d.id} drone={d} x={x} y={y} />;
+          return <DroneMarker key={d.id} drone={displayDrone} x={x} y={y} />;
         })}
       </div>
     </div>

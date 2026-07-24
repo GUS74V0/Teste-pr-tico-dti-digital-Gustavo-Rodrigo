@@ -3,6 +3,7 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Getter
 @Setter
@@ -28,6 +29,7 @@ public class Pedido {
     private StatusPedido status;
 
     // Chave estrangeira ligando o pacote a um voo específico
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voo_id")
     private Voo voo;

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import './Buttons.css';
-import { Package, Battery, Crosshair, Zap } from 'lucide-react';
+import { Package, Battery, Crosshair, Zap, RotateCcw } from 'lucide-react';
 import MapGrid from './components/MapGrid';
 import SidebarQueue from './components/SidebarQueue';
+import SidebarDrones from './components/SidebarDrones';
 import DashboardMetrics from './components/DashboardMetrics';
 import axios from 'axios';
 
@@ -13,6 +14,7 @@ function App() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [drones, setDrones] = useState<Drone[]>([]);
   const [obstaculos, setObstaculos] = useState<Obstaculo[]>([]);
+  const [activeVoos, setActiveVoos] = useState<any[]>([]);
 
   const fetchDados = async () => {
     try {
@@ -80,10 +82,24 @@ function App() {
 
   const handleIniciarEntregas = async () => {
     try {
-      await axios.post('http://localhost:8080/entregas/despachar');
+      const res = await axios.post('http://localhost:8080/entregas/despachar');
+      if (res.data && res.data.length > 0) {
+        setActiveVoos(res.data);
+      }
       fetchDados(); // refresh immediate
     } catch (e) {
       console.error("Erro ao despachar:", e);
+    }
+  };
+
+  const handleReset = async () => {
+    try {
+      await axios.post('http://localhost:8080/reset');
+      setPedidos([]);
+      setObstaculos([]);
+      fetchDados();
+    } catch (e) {
+      console.error("Erro ao resetar:", e);
     }
   };
 
@@ -94,9 +110,14 @@ function App() {
           <h1 className="glow-text" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Zap color="var(--neon-cyan)" /> DroneX Simulator 2D
           </h1>
-          <button className="btn-iniciar-entrega" onClick={handleIniciarEntregas}>
-             ▶ Iniciar Entregas (Despachar)
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn-iniciar-entrega" onClick={handleIniciarEntregas}>
+               ▶ Iniciar Entregas (Despachar)
+            </button>
+            <button className="btn-gerar-mock" style={{ padding: '8px' }} onClick={handleReset} title="Resetar Dados">
+              <RotateCcw size={16} />
+            </button>
+          </div>
         </div>
         <DashboardMetrics drones={drones} pedidos={pedidos} />
       </header>
@@ -113,10 +134,15 @@ function App() {
           obstaculos={obstaculos} 
           drones={drones} 
           pedidos={pedidos}
+          activeVoos={activeVoos}
           onAddObstaculo={handleAddObstaculo} 
           onDeleteObstaculo={handleDeleteObstaculo}
         />
       </main>
+
+      <aside className="sidebar right-sidebar glass-panel">
+        <SidebarDrones drones={drones} />
+      </aside>
     </div>
   );
 }

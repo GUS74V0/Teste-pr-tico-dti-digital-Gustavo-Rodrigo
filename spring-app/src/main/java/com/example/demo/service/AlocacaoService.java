@@ -28,13 +28,14 @@ public class AlocacaoService {
 
 
     @Transactional
-    public void alocarPedidos() {
+    public List<Voo> alocarPedidos() {
+        List<Voo> voosCriados = new ArrayList<>();
         List<Drone> dronesDisponiveis = droneRepository.findAll().stream()
                 .filter(d -> d.getStatus() == StatusDrone.IDLE)
                 .toList();
 
         if (dronesDisponiveis.isEmpty()) {
-            return;
+            return voosCriados;
         }
 
         List<Pedido> pedidosPendentes = pedidoRepository.findByStatusOrderByPrioridadeDescDataCriacaoAsc(StatusPedido.PENDENTE);
@@ -94,8 +95,10 @@ public class AlocacaoService {
 
                 drone.setStatus(StatusDrone.CARREGANDO);
                 droneRepository.save(drone);
+                voosCriados.add(voo);
             }
         }
+        return voosCriados;
     }
 
     private double calcularDistanciaComObstaculos(double x1, double y1, double x2, double y2, List<Obstaculo> obstaculos) {

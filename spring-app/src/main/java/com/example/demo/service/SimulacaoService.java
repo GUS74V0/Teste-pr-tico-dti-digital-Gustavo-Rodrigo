@@ -31,8 +31,7 @@ public class SimulacaoService {
     @Scheduled(fixedRate = 10000)
     @Transactional
     public void simularTempo() {
-        alocacaoService.alocarPedidos();
-
+        // A alocação agora é disparada apenas manualmente via endpoint /entregas/despachar
         List<Voo> voosAtivos = vooRepository.findAll().stream()
                 .filter(v -> v.getStatus() != StatusVoo.CONCLUIDO)
                 .toList();

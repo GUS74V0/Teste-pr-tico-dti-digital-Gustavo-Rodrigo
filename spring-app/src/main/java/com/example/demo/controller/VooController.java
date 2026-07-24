@@ -27,9 +27,9 @@ public class VooController {
     }
 
     @PostMapping("/despachar")
-    public ResponseEntity<Void> despacharVoo() {
-        alocacaoService.alocarPedidos();
-        return ResponseEntity.ok().build();
+    public ResponseEntity<List<Voo>> despacharVoo() {
+        List<Voo> voos = alocacaoService.alocarPedidos();
+        return ResponseEntity.ok(voos);
     }
 
 }

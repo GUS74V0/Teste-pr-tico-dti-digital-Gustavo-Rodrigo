@@ -3,6 +3,7 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 import java.util.List;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Getter
 @Setter
@@ -21,7 +22,8 @@ public class Drone {
     @Enumerated(EnumType.STRING)
     private StatusDrone status;
 
-    @OneToMany(mappedBy = "drone")
+    @JsonIgnore
+    @OneToMany(mappedBy = "drone", cascade = CascadeType.ALL)
     private List<Voo> voos;
 
     public Drone() {
