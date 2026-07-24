@@ -1,4 +1,4 @@
-import { useState, useRef, MouseEvent as ReactMouseEvent, useEffect } from 'react';
+import { useState, useRef, type MouseEvent as ReactMouseEvent, useEffect } from 'react';
 import type { Drone, Pedido, Obstaculo } from '../types';
 import DroneMarker from './DroneMarker';
 import './MapGrid.css';

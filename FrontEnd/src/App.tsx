@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import './Buttons.css';
-import { Package, Battery, Crosshair, Zap, RotateCcw } from 'lucide-react';
+import { Zap, RotateCcw } from 'lucide-react';
 import MapGrid from './components/MapGrid';
 import SidebarQueue from './components/SidebarQueue';
 import SidebarDrones from './components/SidebarDrones';

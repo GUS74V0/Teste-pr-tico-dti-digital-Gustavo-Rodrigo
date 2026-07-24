@@ -1,5 +1,5 @@
 import type { Drone } from '../types';
-import { Crosshair, Battery, BatteryFull, BatteryMedium, BatteryLow } from 'lucide-react';
+import { Crosshair, BatteryFull, BatteryMedium, BatteryLow } from 'lucide-react';
 
 interface SidebarDronesProps {
   drones: Drone[];

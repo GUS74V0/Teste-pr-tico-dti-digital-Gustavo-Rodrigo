@@ -11,7 +11,6 @@ export default function DashboardMetrics({ drones, pedidos, voos = [] }: Dashboa
   const dronesDisponiveis = drones.filter(d => d.status === 'IDLE').length;
   const dronesEmVoo = drones.filter(d => d.status === 'CARREGANDO' || d.status === 'EM_TRANSITO' || d.status === 'EM_VOO' || d.status === 'ENTREGANDO' || d.status === 'RETORNANDO').length;
   
-  const pedidosPendentes = pedidos.filter(p => p.status === 'PENDENTE').length;
   const pedidosEntregues = pedidos.filter(p => p.status === 'ENTREGUE').length;
 
   let tempoMedioStr = "0 min";

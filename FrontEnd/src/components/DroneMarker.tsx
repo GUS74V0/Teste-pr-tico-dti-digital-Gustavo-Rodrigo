@@ -1,6 +1,6 @@
 import type { Drone } from '../types';
 import './DroneMarker.css';
-import { Crosshair, BatteryFull, BatteryMedium, BatteryLow, Zap } from 'lucide-react';
+import { Crosshair, BatteryFull, BatteryMedium, BatteryLow } from 'lucide-react';
 
 interface DroneMarkerProps {
   drone: Drone;
