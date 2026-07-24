@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.model.Voo;
 import com.example.demo.repository.VooRepository;
 import com.example.demo.dto.VooResponseDTO;
+import com.example.demo.service.AlocacaoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +14,11 @@ import java.util.List;
 public class VooController {
 
     private final VooRepository vooRepository;
+    private final AlocacaoService alocacaoService;
 
-    public VooController(VooRepository vooRepository) {
+    public VooController(VooRepository vooRepository, AlocacaoService alocacaoService) {
         this.vooRepository = vooRepository;
+        this.alocacaoService = alocacaoService;
     }
 
     @GetMapping("/rota")
@@ -24,9 +27,9 @@ public class VooController {
     }
 
     @PostMapping("/despachar")
-    public ResponseEntity<VooResponseDTO> despacharVoo() {
-        // Pega a rota calculada, aloca o drone disponível e altera o status para EM_VOO
-        return ResponseEntity.ok(null);
+    public ResponseEntity<Void> despacharVoo() {
+        alocacaoService.alocarPedidos();
+        return ResponseEntity.ok().build();
     }
 
 }

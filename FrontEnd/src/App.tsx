@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './App.css';
+import './Buttons.css';
 import { Package, Battery, Crosshair, Zap } from 'lucide-react';
 import MapGrid from './components/MapGrid';
 import SidebarQueue from './components/SidebarQueue';
@@ -57,16 +58,53 @@ function App() {
     }
   };
 
+  const handleDeleteObstaculo = async (id: number) => {
+    try {
+      await axios.delete(`http://localhost:8080/obstaculos/${id}`);
+      setObstaculos(prev => prev.filter(obs => obs.id !== id));
+    } catch (e) {
+      console.error("Erro ao deletar obstáculo:", e);
+    }
+  };
+
+  const handleGerarPedidosAleatorios = async () => {
+    for (let i = 0; i < 5; i++) {
+      await handleAddPedido({
+        coordenadaX: Math.floor(Math.random() * 80) + 10,
+        coordenadaY: Math.floor(Math.random() * 80) + 10,
+        peso: Math.floor(Math.random() * 10) + 1,
+        prioridade: ['ALTA', 'MEDIA', 'BAIXA'][Math.floor(Math.random() * 3)]
+      });
+    }
+  };
+
+  const handleIniciarEntregas = async () => {
+    try {
+      await axios.post('http://localhost:8080/entregas/despachar');
+      fetchDados(); // refresh immediate
+    } catch (e) {
+      console.error("Erro ao despachar:", e);
+    }
+  };
+
   return (
     <div className="app-container">
       <header className="dashboard-header glass-panel">
-        <h1 className="glow-text" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Zap color="var(--neon-cyan)" /> DroneX Simulator 2D
-        </h1>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <h1 className="glow-text" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Zap color="var(--neon-cyan)" /> DroneX Simulator 2D
+          </h1>
+          <button className="btn-iniciar-entrega" onClick={handleIniciarEntregas}>
+             ▶ Iniciar Entregas (Despachar)
+          </button>
+        </div>
         <DashboardMetrics drones={drones} pedidos={pedidos} />
       </header>
 
       <aside className="sidebar glass-panel">
+        <button className="btn-gerar-mock" onClick={handleGerarPedidosAleatorios}>
+          Gerar 5 Pedidos Mock
+        </button>
         <SidebarQueue pedidos={pedidos} onAddPedido={handleAddPedido} />
       </aside>
 
@@ -76,6 +114,7 @@ function App() {
           drones={drones} 
           pedidos={pedidos}
           onAddObstaculo={handleAddObstaculo} 
+          onDeleteObstaculo={handleDeleteObstaculo}
         />
       </main>
     </div>

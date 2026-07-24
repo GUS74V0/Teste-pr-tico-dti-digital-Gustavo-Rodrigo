@@ -27,4 +27,10 @@ public class ObstaculoController {
     public List<Obstaculo> listarObstaculos() {
         return obstaculoRepository.findAll();
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletarObstaculo(@PathVariable Long id) {
+        obstaculoRepository.deleteById(id);
+    }
 }

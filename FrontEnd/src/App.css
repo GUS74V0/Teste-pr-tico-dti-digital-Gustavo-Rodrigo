@@ -5,6 +5,7 @@
   height: 100vh;
   gap: 24px;
   padding: 24px;
+  background: radial-gradient(circle at center, #1a1a24 0%, #0a0a0f 100%);
 }
 
 .dashboard-header {
@@ -22,6 +23,10 @@
   gap: 16px;
   padding: 24px;
   overflow-y: auto;
+  background: rgba(20, 20, 30, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
 }
 
 .main-content {
@@ -32,4 +37,8 @@
   padding: 0;
   position: relative;
   overflow: hidden;
+  background: rgba(10, 10, 15, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
 }

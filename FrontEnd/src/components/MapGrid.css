@@ -51,11 +51,65 @@
   position: absolute;
   transform: translate(-50%, -50%);
   background: rgba(255, 0, 60, 0.15);
-  border: 1px dashed var(--neon-red);
-  border-radius: 50%;
+  border: 2px dashed var(--neon-red);
+  border-radius: 8px; /* Quadrado com cantos arredondados */
   z-index: 2;
   box-shadow: inset 0 0 20px rgba(255, 0, 60, 0.2);
+  backdrop-filter: blur(2px);
 }
+
+.btn-delete-obs {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--neon-red);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.obstaculo-zone:hover .btn-delete-obs {
+  opacity: 1;
+}
+
+.confirm-box {
+  position: absolute;
+  z-index: 30;
+  background: rgba(10, 10, 15, 0.9);
+  border: 1px solid var(--neon-cyan);
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  color: white;
+  font-size: 0.8rem;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-confirm-yes, .btn-confirm-no {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-confirm-yes { background: var(--neon-cyan); color: #000; }
+.btn-confirm-no { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-glass); }
 
 .selection-box {
   position: absolute;
